@@ -4,11 +4,13 @@ const Card = require("../models/card");
 const getCards = (req, res) =>
   Card.find({})
     .then((cards) => res.status(200).send(cards))
-    .catch(() =>
-      res
-        .status(500)
-        .send({ message: `Ошибка сервера.` })
-    );
+    .catch(() => {
+      if (err.name === 'ValidationError') {
+        res.status(404).send({ message: `Невалидные данные.` })
+      } else {
+        res.status(500).send({ message: `Ошибка сервера.` })
+      }
+    });
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -27,11 +29,13 @@ const deleteCard = (req, res) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
-    .orFail(new Error('NotValidId'))
+    .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.message === 'NotValidId') {
         res.status(404).send({ message: 'Карточка не найдена' });
+      } else if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Невалидный id ' });
       } else {
         res.status(500).send({ message: 'Ошибка сервера' });
       }
@@ -46,11 +50,13 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
-    .orFail(new Error('NotValidId'))
+    .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.message === 'NotValidId') {
         res.status(404).send({ message: 'Карточка не найдена' });
+      } else if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Невалидный id ' });
       } else {
         res.status(500).send({ message: 'Ошибка сервера' });
       }
@@ -65,11 +71,13 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
-    .orFail(new Error('NotValidId'))
+    .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.message === 'NotValidId') {
         res.status(404).send({ message: 'Карточка не найдена' });
+      } else if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Невалидный id ' });
       } else {
         res.status(500).send({ message: 'Ошибка сервера' });
       }

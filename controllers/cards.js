@@ -1,16 +1,15 @@
 /* eslint-disable no-undef */
-const Card = require("../models/card");
+const Card = require('../models/card');
 
-const getCards = (req, res) =>
-  Card.find({})
-    .then((cards) => res.status(200).send(cards))
-    .catch(() => {
-      if (err.name === 'ValidationError') {
-        res.status(404).send({ message: `Невалидные данные.` })
-      } else {
-        res.status(500).send({ message: `Ошибка сервера.` })
-      }
-    });
+const getCards = (req, res) => Card.find({})
+  .then((cards) => res.status(200).send(cards))
+  .catch(() => {
+    if (err.name === 'NotFound') {
+      res.status(404).send({ message: 'Невалидные данные.' });
+    } else {
+      res.status(500).send({ message: 'Ошибка сервера.' });
+    }
+  });
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -18,11 +17,7 @@ const createCard = (req, res) => {
 
   return Card.create({ name, link, owner })
     .then((card) => res.status(200).send(card))
-    .catch(() =>
-      res
-        .status(500)
-        .send({ message: `Ошибка сервера.` })
-    );
+    .catch(() => res.status(500).send({ message: 'Ошибка сервера.' }));
 };
 
 const deleteCard = (req, res) => {
@@ -32,7 +27,7 @@ const deleteCard = (req, res) => {
     .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.message === 'NotValidId') {
+      if (err.message === 'NotFound') {
         res.status(404).send({ message: 'Карточка не найдена' });
       } else if (err.name === 'CastError') {
         res.status(400).send({ message: 'Невалидный id ' });
@@ -48,12 +43,12 @@ const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
     cardId,
     { $addToSet: { likes: req.user._id } },
-    { new: true }
+    { new: true },
   )
     .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.message === 'NotValidId') {
+      if (err.message === 'NotFound') {
         res.status(404).send({ message: 'Карточка не найдена' });
       } else if (err.name === 'CastError') {
         res.status(400).send({ message: 'Невалидный id ' });
@@ -69,12 +64,12 @@ const dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     cardId,
     { $pull: { likes: req.user._id } },
-    { new: true }
+    { new: true },
   )
     .orFail(new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.message === 'NotValidId') {
+      if (err.message === 'NotFound') {
         res.status(404).send({ message: 'Карточка не найдена' });
       } else if (err.name === 'CastError') {
         res.status(400).send({ message: 'Невалидный id ' });
@@ -83,7 +78,6 @@ const dislikeCard = (req, res) => {
       }
     });
 };
-
 
 module.exports = {
   getCards,

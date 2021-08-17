@@ -11,6 +11,8 @@ require('dotenv').config();
 
 const { PORT = 3000 } = process.env;
 const app = express();
+const { validateSignUp, validateSignIn } = require('./middlewares/validators');
+const NotFoundError = require('./errors/NotFoundError');
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
@@ -28,15 +30,15 @@ app.use(
 );
 app.use(cookieParser());
 
-app.post('/signup', createUser);
-app.post('/signin', login);
+app.post('/signup', validateSignUp, createUser);
+app.post('/signin', validateSignIn, login);
 
 app.use(auth);
 
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден.' });
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Запрашиваемый ресурс не найден.'));
 });
 
 app.use(errorHandler);

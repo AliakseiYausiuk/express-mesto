@@ -23,10 +23,10 @@ const createCard = (req, res) => {
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
-  Card.findByIdAndRemove(cardId)
+  Card.findById(cardId)
     .orFail(new Error('Error'))
     .then((card) => {
       if (req.user._id !== card.owner.toString()) {
